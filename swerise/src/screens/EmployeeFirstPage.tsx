@@ -4,9 +4,10 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Icon } from 'react-native-elements'; 
 import SalePage from './SalePage';
 import SettingsPage from './SettingsPage';
-import { getTodaysSalesTotal, getTodaysCreditSales, getAllTimeSales, getAllTimeCreditSales, getLastFiveSales } from '../database';
+import { getTodaysSalesTotal, getTodaysCreditSales, getAllTimeSales, getAllTimeCreditSales, getLastFiveSales, getStockBalances } from '../database';
+import { syncPending } from '../services/syncService';
 import { useFocusEffect } from '@react-navigation/native';
-import { Sale, SaleUI } from './types';
+import { Sale, SaleUI, StockBalance } from './types';
 
 const Tab = createBottomTabNavigator();
 
@@ -18,6 +19,7 @@ const EmployeeHome = () => {
   const [allTimeCreditSales, setAllTimeCreditSales] = useState(0);
   const [allTimeCreditPercentage, setAllTimeCreditPercentage] = useState(0);
   const [salesData, setSalesData] = useState<SaleUI[]>([]);
+  const [stockBalances, setStockBalances] = useState<StockBalance[]>([]);
 
   const fetchData = async () => {
     try {
@@ -25,11 +27,13 @@ const EmployeeHome = () => {
       const creditTodaySales = await getTodaysCreditSales();
       const allTimeSales = await getAllTimeSales();
       const allTimeCreditSales = await getAllTimeCreditSales();
+      const stock = await getStockBalances(1);
 
       setTotalSales(salesTodayTotal);
       setCreditSales(creditTodaySales);
       setAllTimeSales(allTimeSales);
       setAllTimeCreditSales(allTimeCreditSales);
+      setStockBalances(stock);
 
       const percentage = salesTodayTotal > 0 ? (creditTodaySales / salesTodayTotal) * 100 : 0;
       setCreditPercentage(percentage);
@@ -46,20 +50,12 @@ const EmployeeHome = () => {
     }, [])
   );
 
-  const productMapping: { [key: number]: string } = {
-    1: "Gas 6kg",
-    2: "Gas 12kg",
-    3: "Diesel",
-    4: "Petrol",
-    5: "Kerosene"
-  };
-
   const mapSaleToUI = (sale: Sale): SaleUI => ({
     id: sale.sale_id.toString(),
     date: new Date(sale.sale_date).toLocaleDateString(),
-    customer: sale.customer || "New",
-    product: productMapping[sale.product_id] || "Unknown Product",
-    qty: `${sale.quantity} pcs`,
+    customer: sale.customer_name || "New",
+    product: sale.product_name || "Unknown Product",
+    qty: `${sale.quantity} ${sale.product_unit || ""}`.trim(),
     totalAmount: `${sale.total_price.toFixed(2)}`
   });
 
@@ -91,7 +87,7 @@ const EmployeeHome = () => {
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.dateText}>{new Date().toLocaleDateString()}</Text>
-        <TouchableOpacity style={styles.syncButton}>
+        <TouchableOpacity style={styles.syncButton} onPress={() => syncPending()}>
           <Text style={styles.syncText}> Sync </Text>
         </TouchableOpacity>
       </View>
@@ -143,25 +139,15 @@ const EmployeeHome = () => {
             <Text style={styles.bottomOverviewSubHeadingText}>Product</Text>
             <Text style={styles.bottomOverviewSubHeadingText}>Qty</Text>
           </View>
-          <View style={styles.inventoryBox}>
-            <Text>Gas 6kg</Text>
-            <Text>30pcs</Text>
-          </View>
-          <View style={styles.inventoryBox}>
-            <Text>Gas 12kg</Text>
-            <Text>50pcs</Text>
-          </View>
-          <View style={styles.inventoryBox}>
-            <Text>Diesel</Text>
-            <Text>1000L</Text>
-          </View>
-          <View style={styles.inventoryBox}>
-            <Text>Petrol</Text>
-            <Text>1500L</Text>
-          </View>
-          <View style={styles.inventoryBox}>
-            <Text>Kerosene</Text>
-            <Text>2000L</Text>
+          <View>
+            {stockBalances.map(item => (
+              <View key={item.product_id} style={styles.inventoryBox}>
+                <Text>{item.name}</Text>
+                <Text>
+                  {item.balance} {item.unit}
+                </Text>
+              </View>
+            ))}
           </View>
         </View>
 

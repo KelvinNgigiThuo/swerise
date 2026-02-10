@@ -3,12 +3,17 @@ import { HomeScreen, EmployeeFirstPage, OwnerFirstPage } from './screens';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { initializeDatabase } from './database';
+import { startSyncOnConnectivity } from './services/syncService';
 
 const Stack = createStackNavigator();
 
 const Swerise = () => {
   useEffect(() => {
     initializeDatabase();
+    const unsubscribe = startSyncOnConnectivity();
+    return () => {
+      unsubscribe();
+    };
   }, []);
   return (
     <NavigationContainer>

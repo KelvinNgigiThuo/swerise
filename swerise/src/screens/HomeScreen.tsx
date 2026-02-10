@@ -16,10 +16,10 @@ const HomeScreen = () => {
 
       if (user) {
         if (user.password === password) {
-          if (user.role === 'Owner') {
+          if (user.role === 'owner') {
             // Navigate to OwnerFirstPage
             navigation.navigate('OwnerFirstPage');
-          } else if (user.role === 'Employee') {
+          } else if (user.role === 'employee') {
             // Navigate to EmployeeFirstPage
             navigation.navigate('EmployeeFirstPage');
           } else {

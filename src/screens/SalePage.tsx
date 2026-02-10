@@ -1,23 +1,31 @@
 import React, { useState, useEffect } from "react";
 import { StyleSheet, Text, TouchableOpacity, View, FlatList } from 'react-native';
-import { getSalesByDate, insertSale } from "../database";
-import { syncPending } from "../services/syncService";
+import { Picker } from "@react-native-picker/picker";
+import { getSalesByDate, insertSale, insertDebt } from "../database";
 import AddSaleModal from "./AddSaleModal";
-import { Sale, SaleUI, DebtInfo, SaleInput } from './types';
+import { Sale, SaleUI, Debt, DebtInfo } from './types';
 
 const SalePage = () => {
   const [dateFilter, setDateFilter] = useState<'today' | 'week' | 'month'>('today');
   const [salesData, setSalesData] = useState<SaleUI[]>([]);
   const [isModalVisible, setIsModalVisible] = useState(false);
 
+  const productMapping: { [key: number]: string } = {
+    1: "Gas 6kg",
+    2: "Gas 12kg",
+    3: "Diesel",
+    4: "Petrol",
+    5: "Kerosene"
+  };
+
   // Function to map the raw database sale to the UI-friendly format
   const mapSaleToUI = (sale: Sale): SaleUI => {
     return {
       id: sale.sale_id.toString(),
       date: new Date(sale.sale_date).toLocaleDateString(), 
-      customer: sale.customer_name || "New",
-      product: sale.product_name || "Unknown Product", 
-      qty: `${sale.quantity} ${sale.product_unit || ""}`.trim(), 
+      customer: sale.customer || "New",
+      product: productMapping[sale.product_id] || "Unknown Product", 
+      qty: `${sale.quantity} pcs`, 
       totalAmount: `${sale.total_price.toFixed(2)}` 
     };
   };
@@ -43,12 +51,26 @@ const SalePage = () => {
 
   // Function to handle adding a sale
   const handleAddSale = async (
-    sale: SaleInput, 
+    sale: Omit<Sale, "sale_id">, 
     saleType: "cash" | "debt",
     debtInfo: DebtInfo
   ) => {
     try {
-      await insertSale(sale, saleType, debtInfo); 
+      
+      const sale_id = await insertSale(sale, saleType, debtInfo); 
+
+      if (saleType === "debt") {
+        const debt: Debt = {
+          sale_id: sale_id, 
+          customer_name: debtInfo.customer_name,
+          customer_phone: debtInfo.customer_phone,
+          amount_due: debtInfo.amount_due,
+          amount_paid: 0, 
+        };
+
+        
+        await insertDebt(debt); 
+      }
 
       setIsModalVisible(false); 
 
@@ -74,7 +96,7 @@ const SalePage = () => {
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.dateText}>{new Date().toLocaleDateString()}</Text>
-        <TouchableOpacity style={styles.syncButton} onPress={() => syncPending()}>
+        <TouchableOpacity style={styles.syncButton}>
           <Text style={styles.syncText}>Sync</Text>
         </TouchableOpacity>
       </View>
