@@ -7,7 +7,7 @@ export type MockEmployee = {
 
 export const mockEmployees: MockEmployee[] = [
   {
-    username: 'attendant_01',
+    username: 'att01',
     password: '1234',
     fullName: 'Faith Njeri',
     shopName: 'Shop A - Nairobi'
