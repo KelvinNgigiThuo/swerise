@@ -1,8 +1,7 @@
 import { router } from 'expo-router';
-import { ActivityIndicator, Alert, Pressable, RefreshControl, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, RefreshControl, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { ActivityRow } from '@/features/dashboard/components/activity-row';
-import { KpiCard } from '@/features/dashboard/components/kpi-card';
 import { QuickActionButton } from '@/features/dashboard/components/quick-action-button';
 import { useDashboardData } from '@/features/dashboard/hooks/use-dashboard-data';
 import type { DashboardAlert, ShiftStatus } from '@/features/dashboard/types';
@@ -25,8 +24,6 @@ const alertLevelColor: Record<DashboardAlert['level'], string> = {
   critical: '#A31919',
 };
 
-const formatMoney = (value: number) => `KES ${value.toLocaleString('en-KE', { maximumFractionDigits: 0 })}`;
-
 const formatUpdatedAt = (value: Date | null) => {
   if (value === null) {
     return '--';
@@ -37,6 +34,11 @@ const formatUpdatedAt = (value: Date | null) => {
     minute: '2-digit',
   });
 };
+
+const formatCompact = (value: number) =>
+  value.toLocaleString('en-KE', {
+    maximumFractionDigits: 0,
+  });
 
 export default function EmployeeDashboardTab() {
   const { summary, alerts, activities, error, isLoading, isRefreshing, lastUpdated, refresh } = useDashboardData();
@@ -111,31 +113,45 @@ export default function EmployeeDashboardTab() {
           </View>
         )}
 
-        <Text style={styles.sectionTitle}>Today at a glance</Text>
+        <View style={styles.glanceSection}>
+          <Text style={styles.sectionTitle}>Today at a glance</Text>
 
-        <View style={styles.kpiGrid}>
-          <View style={styles.kpiCell}>
-            <KpiCard label="Sales" value={formatMoney(summary.todaySales)} tone="green" />
-          </View>
-          <View style={styles.kpiCell}>
-            <KpiCard label="Transactions" value={String(summary.transactionCount)} tone="blue" />
-          </View>
-          <View style={styles.kpiCell}>
-            <KpiCard label="Average Basket" value={formatMoney(summary.averageBasket)} tone="amber" />
-          </View>
-          <View style={styles.kpiCell}>
-            <KpiCard label="Pending" value={String(summary.pendingActions)} tone="red" />
+          <View style={styles.glanceRow}>
+            <View style={[styles.glanceCard, styles.glanceSalesCard]}>
+              <View style={[styles.glanceAccent, styles.glanceSalesAccent]} />
+              <Text style={styles.glanceLabel}>Sales</Text>
+              <Text style={styles.glanceValue} numberOfLines={1}>
+                {'KES ' + formatCompact(summary.todaySales)}
+              </Text>
+            </View>
+            <View style={[styles.glanceCard, styles.glanceTransactionsCard]}>
+              <View style={[styles.glanceAccent, styles.glanceTransactionsAccent]} />
+              <Text style={styles.glanceLabel}>Transactions</Text>
+              <Text style={styles.glanceValue} numberOfLines={1}>
+                {formatCompact(summary.transactionCount)}
+              </Text>
+            </View>
+            <View style={[styles.glanceCard, styles.glancePendingCard]}>
+              <View style={[styles.glanceAccent, styles.glancePendingAccent]} />
+              <Text style={styles.glanceLabel}>Pending</Text>
+              <Text style={styles.glanceValue} numberOfLines={1}>
+                {formatCompact(summary.pendingActions)}
+              </Text>
+            </View>
           </View>
         </View>
 
         <View style={styles.sectionCard}>
           <Text style={styles.sectionTitle}>Quick Actions</Text>
+          <Text style={styles.sectionHint}>
+            Pricing is managed by the owner. Record quantity and payment only.
+          </Text>
           <View style={styles.actionsGrid}>
             <View style={styles.actionCell}>
               <QuickActionButton
                 label="New Sale"
                 accent="green"
-                onPress={() => Alert.alert('Coming soon', 'Sales capture screen will be added next.')}
+                onPress={() => router.push('/sale-entry')}
               />
             </View>
             <View style={styles.actionCell}>
@@ -143,9 +159,9 @@ export default function EmployeeDashboardTab() {
             </View>
             <View style={styles.actionCell}>
               <QuickActionButton
-                label="End Shift"
+                label="Manage Debts"
                 accent="rose"
-                onPress={() => Alert.alert('Action required', 'Shift end flow will be connected to backend next.')}
+                onPress={() => router.push('/(tabs)/debts')}
               />
             </View>
             <View style={styles.actionCell}>
@@ -160,7 +176,7 @@ export default function EmployeeDashboardTab() {
             <Text style={styles.emptyText}>No active alerts.</Text>
           ) : (
             alerts.map(alert => (
-              <View key={alert.id} style={[styles.alertRow, { borderLeftColor: alertLevelColor[alert.level] }]}> 
+              <View key={alert.id} style={[styles.alertRow, { borderLeftColor: alertLevelColor[alert.level] }]}>
                 <Text style={styles.alertMessage}>{alert.message}</Text>
                 <Text style={styles.alertMeta}>{new Date(alert.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</Text>
               </View>
@@ -285,15 +301,78 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '800',
   },
-  kpiGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginHorizontal: -4,
+  sectionHint: {
+    marginTop: 1,
+    marginBottom: 3,
+    color: '#5C7468',
+    fontSize: 12,
+    fontWeight: '600',
   },
-  kpiCell: {
-    width: '50%',
-    paddingHorizontal: 4,
-    paddingBottom: 8,
+  glanceSection: {
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#D3E3DA',
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    gap: 12,
+  },
+  glanceRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'stretch',
+    gap: 8,
+  },
+  glanceCard: {
+    width: '32%',
+    borderRadius: 12,
+    borderWidth: 1,
+    minHeight: 92,
+    paddingHorizontal: 9,
+    paddingVertical: 9,
+    justifyContent: 'flex-start',
+    gap: 6,
+  },
+  glanceSalesCard: {
+    borderColor: '#CBE8D6',
+    backgroundColor: '#F8FCF9',
+  },
+  glanceTransactionsCard: {
+    borderColor: '#C9DFEF',
+    backgroundColor: '#F8FBFF',
+  },
+  glancePendingCard: {
+    borderColor: '#EFCFCF',
+    backgroundColor: '#FFF9F9',
+  },
+  glanceLabel: {
+    color: '#4F6B5E',
+    fontSize: 10.5,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  glanceValue: {
+    color: '#163F2D',
+    fontSize: 14,
+    fontWeight: '800',
+    lineHeight: 18,
+    marginTop: 'auto',
+  },
+  glanceAccent: {
+    height: 3,
+    width: 28,
+    borderRadius: 999,
+    marginBottom: 6,
+  },
+  glanceSalesAccent: {
+    backgroundColor: '#1F7A4C',
+  },
+  glanceTransactionsAccent: {
+    backgroundColor: '#2E74A8',
+  },
+  glancePendingAccent: {
+    backgroundColor: '#B04343',
   },
   sectionCard: {
     borderRadius: 16,

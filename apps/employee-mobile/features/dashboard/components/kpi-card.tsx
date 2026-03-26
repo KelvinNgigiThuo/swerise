@@ -8,22 +8,59 @@ type KpiCardProps = {
   tone?: KpiTone;
 };
 
-const toneStyles: Record<KpiTone, { borderColor: string; valueColor: string; chipColor: string }> = {
-  green: { borderColor: '#CAE7D6', valueColor: '#165C39', chipColor: '#E7F5EC' },
-  blue: { borderColor: '#CAE0F0', valueColor: '#1B4C75', chipColor: '#E7F2FA' },
-  amber: { borderColor: '#EFDDBE', valueColor: '#7B4C00', chipColor: '#FAF0DE' },
-  red: { borderColor: '#F0CCCC', valueColor: '#8A1E1E', chipColor: '#FBECEC' },
+type TonePalette = {
+  border: string;
+  background: string;
+  accent: string;
+  label: string;
+  value: string;
+};
+
+const toneStyles: Record<KpiTone, TonePalette> = {
+  green: {
+    border: '#CBE8D6',
+    background: '#F7FCF9',
+    accent: '#1F7A4C',
+    label: '#2F5D47',
+    value: '#124F31',
+  },
+  blue: {
+    border: '#C9DFEF',
+    background: '#F7FBFF',
+    accent: '#2E74A8',
+    label: '#2F5A7C',
+    value: '#1B4C75',
+  },
+  amber: {
+    border: '#EEDBB8',
+    background: '#FFFCF5',
+    accent: '#A06B0E',
+    label: '#6F561E',
+    value: '#7B4C00',
+  },
+  red: {
+    border: '#EFCFCF',
+    background: '#FFF9F9',
+    accent: '#B04343',
+    label: '#6A3A3A',
+    value: '#8A1E1E',
+  },
 };
 
 export function KpiCard({ label, value, tone = 'green' }: KpiCardProps) {
   const palette = toneStyles[tone];
 
   return (
-    <View style={[styles.card, { borderColor: palette.borderColor }]}> 
-      <View style={[styles.chip, { backgroundColor: palette.chipColor }]}>
-        <Text style={styles.label}>{label}</Text>
+    <View style={[styles.card, { borderColor: palette.border, backgroundColor: palette.background }]}>
+      <View style={[styles.accent, { backgroundColor: palette.accent }]} />
+      <View style={styles.content}>
+        <Text style={[styles.label, { color: palette.label }]} numberOfLines={1}>
+          {label}
+        </Text>
+        <Text style={[styles.value, { color: palette.value }]} numberOfLines={1}>
+          {value}
+        </Text>
       </View>
-      <Text style={[styles.value, { color: palette.valueColor }]}>{value}</Text>
     </View>
   );
 }
@@ -32,26 +69,29 @@ const styles = StyleSheet.create({
   card: {
     borderRadius: 14,
     borderWidth: 1,
-    backgroundColor: '#FFFFFF',
-    paddingHorizontal: 12,
-    paddingVertical: 11,
-    minHeight: 92,
-    justifyContent: 'space-between',
+    minHeight: 98,
+    overflow: 'hidden',
   },
-  chip: {
-    alignSelf: 'flex-start',
-    borderRadius: 999,
-    paddingHorizontal: 9,
-    paddingVertical: 4,
+  accent: {
+    height: 4,
+    width: '100%',
+  },
+  content: {
+    flex: 1,
+    minWidth: 0,
+    justifyContent: 'center',
+    paddingHorizontal: 10,
+    paddingVertical: 10,
+    gap: 6,
   },
   label: {
-    color: '#385949',
     fontSize: 11.5,
     fontWeight: '700',
   },
   value: {
-    marginTop: 12,
-    fontSize: 18,
+    fontSize: 16,
+    lineHeight: 19,
     fontWeight: '800',
+    flexShrink: 1,
   },
 });
