@@ -13,6 +13,12 @@ const shiftStatusLabel: Record<ShiftStatus, string> = {
   not_started: 'Shift Not Started',
 };
 
+const shiftTone: Record<ShiftStatus, { bg: string; text: string; border: string }> = {
+  active: { bg: '#E7F5EC', text: '#1B663F', border: '#C8E5D5' },
+  ended: { bg: '#F7F0DE', text: '#7C5A13', border: '#E7D8B7' },
+  not_started: { bg: '#F2F3F5', text: '#4E5D68', border: '#D6DCE1' },
+};
+
 const alertLevelColor: Record<DashboardAlert['level'], string> = {
   info: '#1C5C8B',
   warning: '#8A5A09',
@@ -60,21 +66,42 @@ export default function EmployeeDashboardTab() {
     );
   }
 
+  const badgeTone = shiftTone[summary.shiftStatus];
+
   return (
     <SafeAreaView style={styles.page}>
       <ScrollView
         contentContainerStyle={styles.contentContainer}
         refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={() => void refresh()} />}>
         <View style={styles.heroCard}>
-          <Text style={styles.overline}>Employee Dashboard</Text>
-          <Text style={styles.welcomeText}>Hi, {summary.employeeName}</Text>
-          <Text style={styles.shopText}>{summary.shopName}</Text>
-
-          <View style={styles.heroMetaRow}>
-            <View style={styles.shiftPill}>
-              <Text style={styles.shiftPillText}>{shiftStatusLabel[summary.shiftStatus]}</Text>
+          <View style={styles.heroHeaderRow}>
+            <View style={styles.heroIdentityBlock}>
+              <Text style={styles.identityLabel}>Attendant</Text>
+              <Text style={styles.welcomeText}>{summary.employeeName}</Text>
+              <Text style={styles.shopText}>{summary.shopName}</Text>
             </View>
-            <Text style={styles.updatedText}>Updated {formatUpdatedAt(lastUpdated)}</Text>
+
+            <View style={styles.heroStatusBlock}>
+              <View style={[styles.shiftPill, { backgroundColor: badgeTone.bg, borderColor: badgeTone.border }]}>
+                <Text style={[styles.shiftPillText, { color: badgeTone.text }]}>{shiftStatusLabel[summary.shiftStatus]}</Text>
+              </View>
+            </View>
+          </View>
+
+          <View style={styles.heroDivider} />
+
+          <View style={styles.heroFooterRow}>
+            <View>
+              <Text style={styles.syncLabel}>Last synced</Text>
+              <Text style={styles.lastSyncText}>{formatUpdatedAt(lastUpdated)}</Text>
+            </View>
+
+            <Pressable
+              style={({ pressed }) => [styles.syncButton, (pressed || isRefreshing) && styles.syncButtonPressed]}
+              onPress={() => void refresh()}
+              disabled={isRefreshing}>
+              <Text style={styles.syncButtonText}>{isRefreshing ? 'Syncing...' : 'Sync now'}</Text>
+            </Pressable>
           </View>
         </View>
 
@@ -84,9 +111,7 @@ export default function EmployeeDashboardTab() {
           </View>
         )}
 
-        <View style={styles.sectionHeaderRow}>
-          <Text style={styles.sectionTitle}>Today at a glance</Text>
-        </View>
+        <Text style={styles.sectionTitle}>Today at a glance</Text>
 
         <View style={styles.kpiGrid}>
           <View style={styles.kpiCell}>
@@ -163,62 +188,97 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     paddingHorizontal: 16,
-    paddingTop: 10,
+    paddingTop: 12,
     paddingBottom: 24,
-    gap: 14,
+    gap: 12,
   },
   heroCard: {
     backgroundColor: '#F7FCF9',
-    borderColor: '#CFE4D7',
+    borderColor: '#D3E4DA',
     borderWidth: 1,
-    borderRadius: 18,
-    paddingHorizontal: 16,
-    paddingVertical: 16,
+    borderRadius: 16,
+    paddingHorizontal: 14,
+    paddingVertical: 14,
   },
-  overline: {
-    color: '#3F7058',
-    fontSize: 12,
+  heroHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    gap: 10,
+  },
+  heroIdentityBlock: {
+    flex: 1,
+  },
+  heroStatusBlock: {
+    alignItems: 'flex-end',
+  },
+  identityLabel: {
+    color: '#557261',
+    fontSize: 11,
     textTransform: 'uppercase',
-    letterSpacing: 0.9,
+    letterSpacing: 0.8,
     fontWeight: '700',
   },
   welcomeText: {
-    marginTop: 6,
+    marginTop: 3,
     color: '#103F2B',
-    fontSize: 25,
-    fontFamily: 'Georgia',
-    fontWeight: '700',
+    fontSize: 22,
+    fontWeight: '800',
   },
   shopText: {
-    marginTop: 2,
-    color: '#4E6C5D',
+    marginTop: 3,
+    color: '#607466',
     fontSize: 13.5,
-  },
-  heroMetaRow: {
-    marginTop: 13,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    gap: 8,
+    fontWeight: '500',
   },
   shiftPill: {
-    borderRadius: 99,
-    backgroundColor: '#DDF2E5',
-    paddingHorizontal: 11,
+    borderRadius: 999,
+    borderWidth: 1,
+    paddingHorizontal: 10,
     paddingVertical: 6,
   },
   shiftPillText: {
-    color: '#1B663F',
     fontSize: 12,
     fontWeight: '700',
   },
-  updatedText: {
-    color: '#5C7467',
-    fontSize: 12,
+  heroDivider: {
+    marginTop: 12,
+    marginBottom: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#D9E8DF',
+  },
+  heroFooterRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 10,
+  },
+  syncLabel: {
+    color: '#607466',
+    fontSize: 11.5,
     fontWeight: '600',
   },
-  sectionHeaderRow: {
-    paddingHorizontal: 2,
+  lastSyncText: {
+    marginTop: 2,
+    color: '#184632',
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  syncButton: {
+    minHeight: 36,
+    borderRadius: 10,
+    backgroundColor: '#1F7A4C',
+    paddingHorizontal: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  syncButtonPressed: {
+    opacity: 0.88,
+  },
+  syncButtonText: {
+    color: '#FFFFFF',
+    fontSize: 12.5,
+    fontWeight: '800',
   },
   sectionTitle: {
     color: '#113725',

@@ -6,7 +6,7 @@ const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 const DUMMY_PAYLOAD: DashboardPayload = {
   summary: {
-    employeeName: 'Attendant Kelvin',
+    employeeName: 'Attendant Jane',
     shopName: 'Nyeri Road Shop',
     shiftStatus: 'active',
     todaySales: 98650,
