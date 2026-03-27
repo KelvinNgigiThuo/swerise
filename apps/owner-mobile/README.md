@@ -1,11 +1,23 @@
 # Owner Mobile App
 
-Android-first React Native app for owner operations.
+Android-first Expo React Native app for owner operations.
 
-Planned core modules:
-- dashboard
-- shops
-- employees
-- products
-- pricing
-- reports
+Current MVP shell:
+- owner login (mock)
+- owner dashboard
+- shops tab
+- sales tab
+- employees tab
+- settings tab
+
+## Run
+
+```bash
+cd apps/owner-mobile
+npm install
+npm run start
+```
+
+Demo login:
+- username: `owner01`
+- password: `1234`
